@@ -1,11 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include "particle.h"
+#include "globals.h"
 
 int main()
 {
     // Step 1: Create a window
-    sf::RenderWindow window(sf::VideoMode(800, 600), "One Dot Example");
+    unsigned int width = 800;
+    unsigned int height = 600;
+    sf::RenderWindow window(sf::VideoMode({width, height}), "One Dot Example");
 
     // Step 2: Create a circle shape (the "dot")
     // sf::CircleShape dot(5.0f); // 10 pixel radius
@@ -13,37 +16,23 @@ int main()
     // dot.setPosition(100.0f, 100.0f); // Top-left position
     Particle p(100.0f, 100.0f, 5.f, sf::Color::Red);
 
+    sf::Clock clock;
+
     // Step 3: Main loop
     while (window.isOpen())
     {
-        sf::Event event;
-        while (window.pollEvent(event))
+        while (const std::optional event = window.pollEvent())
         {
-            if (event.type == sf::Event::Closed)
+            if (event->is<sf::Event::Closed>())
                 window.close();
-
-            if (event.type == sf::Event::KeyPressed)
-            {
-                switch (event.key.code)
-                {
-                case sf::Keyboard::W:
-                    p.move(0, -5);
-                    break;
-                case sf::Keyboard::A:
-                    p.move(-5, 0);
-                    break;
-                case sf::Keyboard::S:
-                    p.move(0, 5);
-                    break;
-                case sf::Keyboard::D:
-                    p.move(5, 0);
-                    break;
-
-                default:
-                    break;
-                }
-            }
         }
+        float dt = clock.restart().asSeconds();
+
+        // Apply gravity
+        p.applyForce({0.f, GRAVITY});
+
+        // Update with boundary logic
+        p.update(dt, window);
 
         // Step 4: Clear, draw, and display
         window.clear(sf::Color::Black); // Clear screen to black
