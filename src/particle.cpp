@@ -4,7 +4,10 @@
 // TODO: for collisions store the position of each particle when we run the update method.
 // Then at the end we need to do spatial partitioning to devide the grid into groups so that i only check colisions of items in that group
 
+int Particle::nextId = 0;
+
 Particle::Particle(float x, float y, float radius, sf::Color color)
+    : id(nextId++)
 {
     shape.setRadius(radius);
     shape.setFillColor(color);
