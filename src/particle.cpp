@@ -1,6 +1,9 @@
 #include "particle.h"
 #include "globals.h"
 
+// TODO: for collisions store the position of each particle when we run the update method.
+// Then at the end we need to do spatial partitioning to devide the grid into groups so that i only check colisions of items in that group
+
 Particle::Particle(float x, float y, float radius, sf::Color color)
 {
     shape.setRadius(radius);
