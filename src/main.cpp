@@ -10,11 +10,10 @@ int main()
     unsigned int height = 600;
     sf::RenderWindow window(sf::VideoMode({width, height}), "One Dot Example");
 
-    // Step 2: Create a circle shape (the "dot")
-    // sf::CircleShape dot(5.0f); // 10 pixel radius
-    // dot.setFillColor(sf::Color::Red);
-    // dot.setPosition(100.0f, 100.0f); // Top-left position
+    // for (float i = 0; i <= 10; i++)
+    // {
     Particle p(100.0f, 100.0f, 5.f, sf::Color::Red);
+    // }
 
     sf::Clock clock;
 

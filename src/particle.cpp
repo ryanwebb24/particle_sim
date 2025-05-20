@@ -1,4 +1,5 @@
 #include "particle.h"
+#include "globals.h"
 
 Particle::Particle(float x, float y, float radius, sf::Color color)
 {
@@ -28,23 +29,23 @@ void Particle::update(float dt, const sf::RenderWindow &window)
     if (pos.x < 0.f)
     {
         pos.x = 0.f;
-        velocity.x *= -1; // bounce
+        velocity.x *= -ELASTIC_RESTITUTION; // bounce
     }
     else if (pos.x + diameter > winWidth)
     {
         pos.x = winWidth - diameter;
-        velocity.x *= -1;
+        velocity.x *= -ELASTIC_RESTITUTION;
     }
 
     if (pos.y < 0.f)
     {
         pos.y = 0.f;
-        velocity.y *= -1;
+        velocity.y *= -ELASTIC_RESTITUTION;
     }
     else if (pos.y + diameter > winHeight)
     {
         pos.y = winHeight - diameter;
-        velocity.y *= -1;
+        velocity.y *= -ELASTIC_RESTITUTION;
     }
 
     shape.setPosition(pos);

@@ -1,3 +1,4 @@
 #include "globals.h"
 
-float GRAVITY = 9.8f;
+float GRAVITY = 100.0f;
+float ELASTIC_RESTITUTION = 0.1f;
