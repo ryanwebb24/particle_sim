@@ -57,7 +57,7 @@ int main()
         int xpos = i % gridsize;
         int ypos = i / gridsize;
 
-        particles.emplace_back(100.f + (xpos * 30) + i, 200.f + (ypos * 30), 30.f, sf::Color::Red);
+        particles.emplace_back(100.f + (xpos * 30) + i, 200.f + (ypos * 30), 10.f, sf::Color::Red);
     }
 
     sf::Clock clock;
