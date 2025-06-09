@@ -4,25 +4,43 @@
 
 class Particle
 {
-public:
-    Particle(float x, float y, float radius, sf::Color color);
-
-    void draw(sf::RenderWindow &window);
-    void update(float dt, const sf::RenderWindow &window);
-    void applyForce(const sf::Vector2f &force);
-    int getId() const { return id; }
-    // sf::Vector2f getPosition() {return }
-    sf::Vector2f getPosition() const { return shape.getPosition(); }
-    float getRadius() const { return shape.getRadius(); }
-
-    sf::Vector2f getVelocity() const { return velocity; }
-    void setVelocity(const sf::Vector2f &v) { velocity = v; }
-    void setPosition(const sf::Vector2f &pos) { shape.setPosition(pos); }
-
 private:
     sf::CircleShape shape;
     sf::Vector2f velocity;
     sf::Vector2f acceleration;
+    sf::Vector2f position;
     static int nextId;
     int id;
+    int x;
+    int y;
+    float radius;
+
+public:
+    Particle(float x, float y, float radius, sf::Color color);
+
+    // Getters
+    int getId() const { return id; }
+    float getRadius() const { return radius; }
+    sf::Vector2f getPosition() const { return position; }
+    sf::Vector2f getVelocity() const { return velocity; }
+
+    // Setters
+    void setVelocity(const sf::Vector2f &v) { velocity = v; }
+    void setPosition(const sf::Vector2f &pos)
+    {
+        position = pos;
+        shape.setPosition(pos);
+    }
+    void move(const sf::Vector2f &delta)
+    {
+        position += delta;
+        shape.move(delta);
+    }
+    void applyForce(const sf::Vector2f &force)
+    {
+        acceleration += force;
+    }
+
+    // Utility
+    void update(float dt, sf::RenderWindow &window);
 };

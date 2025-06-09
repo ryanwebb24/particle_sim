@@ -7,25 +7,19 @@
 int Particle::nextId = 0;
 
 Particle::Particle(float x, float y, float radius, sf::Color color)
-    : id(nextId++)
+    : id(nextId++), x(x), y(y), position(x, y), radius(radius)
 {
     shape.setRadius(radius);
     shape.setFillColor(color);
     shape.setPosition({x, y});
 }
 
-void Particle::draw(sf::RenderWindow &window)
-{
-    window.draw(shape);
-}
-
-void Particle::update(float dt, const sf::RenderWindow &window)
+void Particle::update(float dt, sf::RenderWindow &window)
 {
     velocity += acceleration * dt;
-    shape.move(velocity * dt);
+    move(velocity * dt);
 
-    sf::Vector2f pos = shape.getPosition();
-    float radius = shape.getRadius();
+    sf::Vector2f pos = position;
     float diameter = radius * 2;
 
     // Window bounds
@@ -39,7 +33,7 @@ void Particle::update(float dt, const sf::RenderWindow &window)
     }
     else if (pos.x + diameter > winWidth)
     {
-        pos.x = winWidth - diameter;
+        position.x = winWidth - diameter;
         velocity.x *= -ELASTIC_RESTITUTION;
     }
 
@@ -54,11 +48,8 @@ void Particle::update(float dt, const sf::RenderWindow &window)
         velocity.y *= -ELASTIC_RESTITUTION;
     }
 
-    shape.setPosition(pos);
+    setPosition(pos);
     acceleration = sf::Vector2f(0.f, 0.f); // reset after each frame
-}
-
-void Particle::applyForce(const sf::Vector2f &force)
-{
-    acceleration += force;
+    // draw shape at end of update
+    window.draw(shape);
 }
