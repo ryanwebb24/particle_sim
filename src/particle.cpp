@@ -1,5 +1,6 @@
 #include "particle.h"
 #include "globals.h"
+#include "globals.h"
 
 // TODO: for collisions store the position of each particle when we run the update method.
 // Then at the end we need to do spatial partitioning to devide the grid into groups so that i only check colisions of items in that group
@@ -14,21 +15,18 @@ Particle::Particle(float x, float y, float radius, sf::Color color)
     shape.setPosition({x, y});
 }
 
-void Particle::update(float dt, sf::RenderWindow &window)
+void Particle::handleWallCollision(const sf::RenderWindow &window)
 {
-    velocity += acceleration * dt;
-    move(velocity * dt);
-
     sf::Vector2f pos = position;
     float diameter = radius * 2;
 
     // Window bounds
-    float winWidth = static_cast<float>(window.getSize().x);
-    float winHeight = static_cast<float>(window.getSize().y);
+    float winWidth = static_cast<float>(window.getSize().x) - WINDOW_PADDING;
+    float winHeight = static_cast<float>(window.getSize().y) - WINDOW_PADDING;
 
-    if (pos.x < 0.f)
+    if (pos.x < WINDOW_PADDING)
     {
-        pos.x = 0.f;
+        pos.x = WINDOW_PADDING;
         velocity.x *= -ELASTIC_RESTITUTION; // bounce
     }
     else if (pos.x + diameter > winWidth)
@@ -37,9 +35,9 @@ void Particle::update(float dt, sf::RenderWindow &window)
         velocity.x *= -ELASTIC_RESTITUTION;
     }
 
-    if (pos.y < 0.f)
+    if (pos.y < WINDOW_PADDING)
     {
-        pos.y = 0.f;
+        pos.y = WINDOW_PADDING;
         velocity.y *= -ELASTIC_RESTITUTION;
     }
     else if (pos.y + diameter > winHeight)
@@ -48,7 +46,19 @@ void Particle::update(float dt, sf::RenderWindow &window)
         velocity.y *= -ELASTIC_RESTITUTION;
     }
 
+    // clamp position just in case
+    pos.x = std::max(WINDOW_PADDING, std::min(pos.x, winWidth - diameter));
+    pos.y = std::max(WINDOW_PADDING, std::min(pos.y, winHeight - diameter));
     setPosition(pos);
+}
+
+void Particle::update(float dt, sf::RenderWindow &window)
+{
+    velocity += acceleration * dt;
+    move(velocity * dt);
+
+    handleWallCollision(window);
+
     acceleration = sf::Vector2f(0.f, 0.f); // reset after each frame
     // draw shape at end of update
     window.draw(shape);

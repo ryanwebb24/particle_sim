@@ -14,6 +14,7 @@ private:
     int x;
     int y;
     float radius;
+    void handleWallCollision(const sf::RenderWindow &window);
 
 public:
     Particle(float x, float y, float radius, sf::Color color);
