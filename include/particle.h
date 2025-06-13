@@ -2,22 +2,22 @@
 
 #include <SFML/Graphics.hpp>
 
-class Particle
-{
-private:
+class Particle {
+   private:
     sf::CircleShape shape;
     sf::Vector2f velocity;
     sf::Vector2f acceleration;
     sf::Vector2f position;
     static int nextId;
-    int id;
     int x;
     int y;
     float radius;
     void handleWallCollision(const sf::RenderWindow &window);
 
-public:
+   public:
     Particle(float x, float y, float radius, sf::Color color);
+
+    int id;
 
     // Getters
     int getId() const { return id; }
@@ -27,18 +27,15 @@ public:
 
     // Setters
     void setVelocity(const sf::Vector2f &v) { velocity = v; }
-    void setPosition(const sf::Vector2f &pos)
-    {
+    void setPosition(const sf::Vector2f &pos) {
         position = pos;
         shape.setPosition(pos);
     }
-    void move(const sf::Vector2f &delta)
-    {
+    void move(const sf::Vector2f &delta) {
         position += delta;
         shape.move(delta);
     }
-    void applyForce(const sf::Vector2f &force)
-    {
+    void applyForce(const sf::Vector2f &force) {
         acceleration += force;
     }
 
