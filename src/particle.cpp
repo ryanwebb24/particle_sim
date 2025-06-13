@@ -1,4 +1,5 @@
 #include "particle.h"
+
 #include "globals.h"
 
 // TODO: for collisions store the position of each particle when we run the update method.
@@ -7,58 +8,56 @@
 int Particle::nextId = 0;
 
 Particle::Particle(float x, float y, float radius, sf::Color color)
-    : id(nextId++)
-{
+    : id(nextId++), x(x), y(y), position(x, y), radius(radius) {
     shape.setRadius(radius);
     shape.setFillColor(color);
     shape.setPosition({x, y});
 }
 
-void Particle::draw(sf::RenderWindow &window)
-{
-    window.draw(shape);
-}
-
-void Particle::update(float dt, const sf::RenderWindow &window)
-{
-    velocity += acceleration * dt;
-    shape.move(velocity * dt);
-
-    sf::Vector2f pos = shape.getPosition();
-    float radius = shape.getRadius();
+void Particle::handleWallCollision(const sf::RenderWindow &window) {
+    sf::Vector2f pos = position;
     float diameter = radius * 2;
 
     // Window bounds
-    float winWidth = static_cast<float>(window.getSize().x);
-    float winHeight = static_cast<float>(window.getSize().y);
+    float winWidth = static_cast<float>(window.getSize().x) - WINDOW_PADDING;
+    float winHeight = static_cast<float>(window.getSize().y) - WINDOW_PADDING;
 
-    if (pos.x < 0.f)
-    {
-        pos.x = 0.f;
-        velocity.x *= -ELASTIC_RESTITUTION; // bounce
-    }
-    else if (pos.x + diameter > winWidth)
-    {
-        pos.x = winWidth - diameter;
+    if (pos.x < WINDOW_PADDING) {
+        pos.x = WINDOW_PADDING;
+        velocity.x *= -ELASTIC_RESTITUTION;  // bounce
+    } else if (pos.x + diameter > winWidth) {
+        position.x = winWidth - diameter;
         velocity.x *= -ELASTIC_RESTITUTION;
     }
 
-    if (pos.y < 0.f)
-    {
-        pos.y = 0.f;
+    if (pos.y < WINDOW_PADDING) {
+        pos.y = WINDOW_PADDING;
         velocity.y *= -ELASTIC_RESTITUTION;
-    }
-    else if (pos.y + diameter > winHeight)
-    {
+    } else if (pos.y + diameter > winHeight) {
         pos.y = winHeight - diameter;
         velocity.y *= -ELASTIC_RESTITUTION;
     }
 
-    shape.setPosition(pos);
-    acceleration = sf::Vector2f(0.f, 0.f); // reset after each frame
+    // clamp position just in case
+    pos.x = std::max(WINDOW_PADDING, std::min(pos.x, winWidth - diameter));
+    pos.y = std::max(WINDOW_PADDING, std::min(pos.y, winHeight - diameter));
+    setPosition(pos);
 }
 
-void Particle::applyForce(const sf::Vector2f &force)
-{
-    acceleration += force;
+void Particle::update(float dt, sf::RenderWindow &window) {
+    velocity += acceleration * dt;
+    move(velocity * dt);
+
+    handleWallCollision(window);
+
+    acceleration = sf::Vector2f(0.f, 0.f);  // reset after each frame
+    // draw shape at end of update
+    window.draw(shape);
+
+    sf::Vector2f pos = shape.getPosition();
+    int gridX = static_cast<int>(pos.x) / COLLISION_CELL_SIZE;
+    int gridY = static_cast<int>(pos.y) / COLLISION_CELL_SIZE;
+
+    // Add to spatial hash map
+    PARTICLE_GRID[{gridX, gridY}].push_back(this);
 }

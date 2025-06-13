@@ -1,104 +1,87 @@
 #include <SFML/Graphics.hpp>
+#include <cmath>
 #include <iostream>
 #include <vector>
-#include "particle.h"
+
+#include "collisions.h"
 #include "globals.h"
-#include <cmath>
+#include "particle.h"
 
-bool checkCollision(const Particle &a, const Particle &b)
-{
-    sf::Vector2f diff = a.getPosition() - b.getPosition();
-    float distSq = diff.x * diff.x + diff.y * diff.y;
-    float r = a.getRadius() + b.getRadius();
-    return distSq < r * r;
-}
-
-void resolveCollision(Particle &a, Particle &b)
-{
-    sf::Vector2f delta = a.getPosition() - b.getPosition();
-    float dist = std::sqrt(delta.x * delta.x + delta.y * delta.y);
-    if (dist == 0.f)
-        return;
-
-    sf::Vector2f normal = delta / dist;
-
-    // --- Velocity resolution ---
-    sf::Vector2f relVel = a.getVelocity() - b.getVelocity();
-    float velAlongNormal = relVel.x * normal.x + relVel.y * normal.y;
-    if (velAlongNormal > 0)
-        return;
-
-    float restitution = ELASTIC_RESTITUTION;
-    float j = -(1 + restitution) * velAlongNormal;
-    j /= 2.0f;
-
-    sf::Vector2f impulse = j * normal;
-    a.setVelocity(a.getVelocity() + impulse);
-    b.setVelocity(b.getVelocity() - impulse);
-
-    // --- Positional correction ---
-    float penetration = a.getRadius() + b.getRadius() - dist;
-    sf::Vector2f correction = (penetration / 2.f) * normal;
-    a.setPosition(a.getPosition() + correction);
-    b.setPosition(b.getPosition() - correction);
-}
-
-int main()
-{
-    // Step 1: Create a window
-    unsigned int width = 800;
-    unsigned int height = 600;
-    sf::RenderWindow window(sf::VideoMode({width, height}), "One Dot Example");
+std::vector<Particle> initParticles(int width, int height) {
     std::vector<Particle> particles;
 
-    for (int i = 0; i < 100; ++i)
-    {
-        const int gridsize = 10;
-        int xpos = i % gridsize;
-        int ypos = i / gridsize;
+    // initialize vector with particles
+    const int numberOfParticles = 10000;
+    const int gridCols = std::ceil(std::sqrt(numberOfParticles));
+    const int gridRows = std::ceil(numberOfParticles / static_cast<float>(gridCols));
+    float availableWidth = width - 2 * WINDOW_PADDING;
+    float availableHeight = height - 2 * WINDOW_PADDING;
 
-        particles.emplace_back(100.f + (xpos * 30) + i, 200.f + (ypos * 30), 10.f, sf::Color::Red);
+    float cellWidth = availableWidth / gridCols;
+    float cellHeight = availableHeight / gridRows;
+    float particleRadius = 1.f;  // leave gap between particles
+
+    particles.reserve(numberOfParticles);
+    for (int i = 0; i < numberOfParticles; ++i) {
+        int col = i % gridCols;
+        int row = i / gridCols;
+
+        float xOffset = (row % 2 == 0) ? 0.f : cellWidth / 2.f;
+        float x = WINDOW_PADDING + col * cellWidth + xOffset + cellWidth / 2.f;
+        float y = WINDOW_PADDING + row * cellHeight + cellHeight / 2.f;
+
+        particles.emplace_back(x, y, particleRadius, sf::Color::Red);
     }
+    return particles;
+}
 
-    sf::Clock clock;
+int main() {
+    // Step 1: Create a window
+    unsigned int width = 1800;
+    unsigned int height = 1000;
+    sf::RenderWindow window(sf::VideoMode({width, height}), "One Dot Example");
+
+    std::vector<Particle> particles = initParticles(width, height);
+
+    std::vector<Particle> mouseParticle(0.f, 0.f, 10.f, sf::Color::White);
+
+    sf::Clock deltaClock;
+    sf::Clock fpsClock;
+    int frameCount = 0;
+    bool hasRun = false;
 
     // Step 3: Main loop
-    while (window.isOpen())
-    {
-        while (const std::optional event = window.pollEvent())
-        {
+    while (window.isOpen()) {
+        while (const std::optional event = window.pollEvent()) {
             if (event->is<sf::Event::Closed>())
                 window.close();
         }
-        float dt = clock.restart().asSeconds();
+        float dt = deltaClock.restart().asSeconds();
 
-        for (auto &p : particles)
-        {
-            p.applyForce({0.f, GRAVITY});
-            // Gravity in +y direction
-            p.update(dt, window);
-        }
+        frameCount++;
+        if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
+            float fps = frameCount / fpsClock.getElapsedTime().asSeconds();
+            frameCount = 0;
+            fpsClock.restart();
 
-        for (size_t i = 0; i < particles.size(); ++i)
-        {
-            for (size_t j = i + 1; j < particles.size(); ++j)
-            {
-                if (checkCollision(particles[i], particles[j]))
-                {
-                    // Basic elastic bounce (we’ll improve this later)
-                    resolveCollision(particles[i], particles[j]);
-                }
-            }
+            // Update the window title
+            window.setTitle("Particle Simulation - FPS: " + std::to_string(static_cast<int>(fps)));
         }
 
         // Step 4: Clear, draw, and display
-        window.clear(sf::Color::Black); // Clear screen to black
-        for (auto &p : particles)
-        {
-            p.draw(window); // Draw the particle
-        }
+        window.clear(sf::Color::Black);  // Clear screen to black
 
-        window.display(); // Show everything on screen
+        PARTICLE_GRID.clear();
+
+        for (auto &p : particles) {
+            // applying gravity every time
+            p.applyForce({0.f, GRAVITY});
+            // make sure to update
+            p.update(dt, window);
+        }
+        getCollisions();
+
+        window.display();  // Show everything on screen
     }
 
     return 0;
